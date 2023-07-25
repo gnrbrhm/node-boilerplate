@@ -11,7 +11,7 @@ const symbol = 'BTCUSDT';
     const assetPrices:any = await client.getMarkPrice({
       symbol:symbol
     })
-	console.log('Asset Prices',assetPrices['markPrice'])
+	console.log('Asset Prices',assetPrices)
 	const markPrice :any = assetPrices['markPrice']
     const stopLossPrice = Number(markPrice * 99.5 / 100).toFixed(2)
     const takeProfitPrice = Number(markPrice * 100.5 / 100).toFixed(2)
