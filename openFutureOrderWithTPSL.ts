@@ -1,10 +1,8 @@
-import { USDMClient, NewFuturesOrderParams } from "binance";
-// import { CoinMClient, MainClient, USDMClient } from "binance";
+import { USDMClient, NewFuturesOrderParams,MarkPrice } from "binance";
 
 const testnet = true;
 const baseUrl = testnet
-  ? "https://testnet.binancefuture.com"
-  : //   "https://testnet.binance.vision"
+  ? "https://testnet.binancefuture.com" : 
     "https://api.binance.com";
 const client = new USDMClient({
   api_key: "6522dba195264b2a747255c4eb0c2a0819347eea7279e9cebf3e4cc68fcd9bbf", //process.env["BINANCE_API_KEY"],
@@ -12,20 +10,23 @@ const client = new USDMClient({
     "e960984f5431757c3c9b1cb63695ed5eeb585dba300f2b1dcee8fa60a5aa7a92", // process.env["BINANCE_API_SECRET"],
   baseUrl,
 });
-const symbol = 'ETHUSDT';
+const symbol = 'BTCUSDT';
 
 // submit a 1:1 bracket market buy order with market entry order
 (async () => {
   try {
     // TODO: check balance and do other validations
 
-    const assetPrices = await client.getMarkPrice({
-      symbol: "ETHUSDT"
+    const assetPrices:any = await client.getMarkPrice({
+      symbol:symbol
     })
-	console.log('Asset Prices',assetPrices)
-    const markPrice: number = Number(assetPrices)
-    const stopLossPrice = Number(markPrice * 99.9 / 100).toFixed(2)
-    const takeProfitPrice = Number(markPrice * 100.1 / 100).toFixed(2)
+	console.log('Asset Prices',assetPrices['markPrice'])
+	const markPrice :any = assetPrices['markPrice']
+    const stopLossPrice = Number(markPrice * 99.5 / 100).toFixed(2)
+    const takeProfitPrice = Number(markPrice * 100.5 / 100).toFixed(2)
+	console.log('markPrice',markPrice)
+	console.log('stopLossPrice',stopLossPrice)
+	console.log('takeProfitPrice',takeProfitPrice)
 
     // create three orders
     // 1. entry order (GTC),
@@ -37,7 +38,7 @@ const symbol = 'ETHUSDT';
       quantity: "0.01",
       reduceOnly: "false",
       side: "BUY",
-      symbol: "ETHUSDT",
+      symbol: symbol,
       type: "MARKET",
     };
 
@@ -47,7 +48,7 @@ const symbol = 'ETHUSDT';
       quantity: "0.01",
       side: "SELL",
       stopPrice: takeProfitPrice,
-      symbol: "ETHUSDT",
+      symbol: symbol,
       timeInForce: "GTE_GTC",
       type: "TAKE_PROFIT_MARKET",
       workingType: "MARK_PRICE",
@@ -60,14 +61,15 @@ const symbol = 'ETHUSDT';
       quantity: "0.01",
       side: "SELL",
       stopPrice: stopLossPrice,
-      symbol: "ETHUSDT",
-      timeInForce: "GTE_GTC",
+      symbol: symbol,
+      timeInForce: "GTC",
       type: "STOP_MARKET",
       workingType: "MARK_PRICE",
       closePosition: "true"
     };
 
-    const openedOrder = await client.submitMultipleOrders([entryOrder, takeProfitOrder, stopLossOrder])
+    const openedOrder = await client.submitMultipleOrders(
+		[entryOrder, takeProfitOrder, stopLossOrder])
       .catch(e => console.log(e?.body || e));
     console.log(openedOrder);
   } catch (e) {
